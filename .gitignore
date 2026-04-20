@@ -1,2 +1,5 @@
 secrets*
 *.env
+flask_session
+__pycache__
+uv.lock
