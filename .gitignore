@@ -6,3 +6,5 @@ uv.lock
 .python-version
 *.log
 screenshots*
+*.db
+webapp_secrets.json
