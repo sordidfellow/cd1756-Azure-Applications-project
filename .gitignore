@@ -3,3 +3,5 @@ secrets*
 flask_session
 __pycache__
 uv.lock
+.python-version
+*.log
