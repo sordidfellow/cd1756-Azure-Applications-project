@@ -23,7 +23,7 @@ if os.path.exists(settings_file):
         settings = json.load(f)
         for setting in settings:
             os.environ[setting['name']] = setting['value']
-            print(f"{setting['name']} = {setting['value']}")
+            # print(f"{setting['name']} = {setting['value']}")
     print("Loaded environment variables from webapp_secrets.json")
 
 # Set local development mode
