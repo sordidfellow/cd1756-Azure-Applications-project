@@ -59,35 +59,42 @@ def post(id):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    app.logger.info("/login - endpoint starting...")
     if current_user.is_authenticated:
         return redirect(url_for('home'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user is None or not user.check_password(form.password.data):
+            app.logger.warning("/login - user failed to log in")
             flash('Invalid username or password')
             return redirect(url_for('login'))
+        app.logger.info("/login - user successfully logged in with username/password")
         login_user(user, remember=form.remember_me.data)
         next_page = request.args.get('next')
         if not next_page or url_parse(next_page).netloc != '':
             next_page = url_for('home')
         return redirect(next_page)
     session["state"] = str(uuid.uuid4())
-    auth_url = _build_auth_url(scopes=Config.SCOPE, state=session["state"])
+    app.logger.info("/login - starting auth url flow...")
+    auth_url = _build_auth_url(authority=Config.AUTHORITY, scopes=Config.SCOPE, state=session["state"])
     return render_template('login.html', title='Sign In', form=form, auth_url=auth_url)
 
 @app.route(Config.REDIRECT_PATH)  # Its absolute URL must match your app's redirect_uri set in AAD
 def authorized():
+    app.logger.info("/authorized endpoint starting...")
     if request.args.get('state') != session.get("state"):
         return redirect(url_for("home"))  # No-OP. Goes back to Index page
     if "error" in request.args:  # Authentication/Authorization failure
         return render_template("auth_error.html", result=request.args)
     if request.args.get('code'):
+        app.logger.info("/authorized - checking status of values....")
         cache = _load_cache()
         result = _build_msal_app().acquire_token_by_auth_code_flow(
             session.get("flow", {}), request.args)
         if "error" in result:
             return render_template("auth_error.html", result=result)
+        app.logger.info("/authorized - extracting claims...")
         session["user"] = result.get("id_token_claims")
         # Note: In a real app, we'd use the 'name' property from session["user"] below
         # Here, we'll use the admin username for anyone who is authenticated by MS
@@ -98,6 +105,7 @@ def authorized():
 
 @app.route('/logout')
 def logout():
+    app.logger.info("/logout - called")
     logout_user()
     if session.get("user"): # Used MS Login
         # Wipe out user and its token cache from session
@@ -121,10 +129,13 @@ def _save_cache(cache):
     pass
 
 def _build_msal_app(cache=None, authority=None):
+    app.logger.info(f"_build_msal_app called with {cache =} and {authority =}")
     return msal.ConfidentialClientApplication(
         client_id=Config.CLIENT_ID, authority=authority, client_credential=Config.CLIENT_SECRET, token_cache=cache)
 
 def _build_auth_url(authority=None, scopes=None, state=None):
+    app.logger.info(f"_build_auth_url called, params are {authority =} {scopes =} {state =}")
     auth_url = _build_msal_app(cache=_load_cache(), authority=(authority or Config.AUTHORITY)).get_authorization_request_url(
         scopes=scopes, redirect_uri=url_for('authorized', _external=True))
+    app.logger.info(f"_build_auth_url returning, value redirect({auth_url =})")
     return redirect(auth_url)
