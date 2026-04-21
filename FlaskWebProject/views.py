@@ -2,11 +2,10 @@
 Routes and views for the flask application.
 """
 
-from datetime import datetime
 from flask import render_template, flash, redirect, request, session, url_for
 from werkzeug.urls import url_parse
 from config import Config
-from FlaskWebProject import app, db
+from FlaskWebProject import app
 from FlaskWebProject.forms import LoginForm, PostForm
 from flask_login import current_user, login_user, logout_user, login_required
 from FlaskWebProject.models import User, Post
@@ -86,7 +85,8 @@ def authorized():
     if request.args.get('code'):
         cache = _load_cache()
         # TODO: Acquire a token from a built msal app, along with the appropriate redirect URI
-        result = None
+        result = _build_msal_app().acquire_token_by_auth_code_flow(
+            session.get("flow", {}), request.args)
         if "error" in result:
             return render_template("auth_error.html", result=result)
         session["user"] = result.get("id_token_claims")
@@ -120,9 +120,11 @@ def _save_cache(cache):
     pass
 
 def _build_msal_app(cache=None, authority=None):
-    # TODO: Return a ConfidentialClientApplication
-    return None
+    return msal.ConfidentialClientApplication(
+        client_id=Config.CLIENT_ID, authority=Config.AUTHORITY, client_credential=Config.CLIENT_SECRET)
 
 def _build_auth_url(authority=None, scopes=None, state=None):
-    # TODO: Return the full Auth Request URL with appropriate Redirect URI
-    return None
+    flow = _build_msal_app().initiate_auth_code_flow(
+        SCOPE=scopes, redirect_uri=url_for(Config.REDIRECT_PATH, _external=True))
+    session["flow"] = flow
+    return redirect(flow["auth_uri"])
