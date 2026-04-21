@@ -37,7 +37,7 @@ class Config(object):
     # AUTHORITY = "https://login.microsoftonline.com/common"  # For multi-tenant app, else put tenant name
     # AUTHORITY = "https://login.microsoftonline.com/Enter_the_Tenant_Name_Here"
     # AUTHORITY = "https://login.microsoftonline.com/15d167c9-4e0f-4697-bb39-f7dd7b4dd2a4"
-    AUTHORITY = "https://login.microsoftonline.com/stephenmsogletree.onmicrosoft.com/"
+    AUTHORITY = "https://login.microsoftonline.com/stephenmsogletree.onmicrosoft.com"
 
     CLIENT_ID = os.getenv("CLIENT_ID")
     if not CLIENT_ID:

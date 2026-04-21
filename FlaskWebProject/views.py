@@ -127,6 +127,6 @@ def _build_msal_app(cache=None, authority=None):
 
 def _build_auth_url(authority=None, scopes=None, state=None):
     flow = _build_msal_app().initiate_auth_code_flow(
-        SCOPE=scopes, redirect_uri=url_for(Config.REDIRECT_PATH, _external=True))
+        SCOPE=scopes, redirect_uri=url_for('authorized', _external=True))
     session["flow"] = flow
     return redirect(flow["auth_uri"])
