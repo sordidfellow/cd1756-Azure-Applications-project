@@ -136,6 +136,6 @@ def _build_msal_app(cache=None, authority=None):
 def _build_auth_url(authority=None, scopes=None, state=None):
     app.logger.info(f"_build_auth_url called, params are {authority =} {scopes =} {state =}")
     auth_url = _build_msal_app(cache=_load_cache(), authority=(authority or Config.AUTHORITY)).get_authorization_request_url(
-        scopes=scopes, redirect_uri=url_for('authorized', _external=True))
+        scopes=scopes, redirect_uri=url_for('authorized', _external=True, _scheme = "https"))
     app.logger.info(f"_build_auth_url returning, value {auth_url =}")
     return auth_url
