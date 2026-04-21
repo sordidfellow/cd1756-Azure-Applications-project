@@ -13,9 +13,23 @@ It is more expensive, but for a learning project that remains small, I'm willing
 
 App service is more scalable if this was a larger project that could grow, even if the base cost is higher, that option could be worth it in real world deployment scenarios.
 
+# Addendum for submission #2 since more explicit analysis was requested:
+
+## COSTS:
+VM costs are cheaper, but scaling is a more of manual process that requires more prep/configuration.
+
+## SCALABILITY:
+App Service Scales easier, with auto-scaling horizontally and scaling vertically.
+
+## AVAILABILITY:
+App Service has high availability out of the box, while VMs require setup and config to get similar availability.
+
+## WORKFLOW:
+VMs require configuring basically everything yourself.
+App service allows you to just deploy the minimal code and get the web server, load balancer, and scale sets out of the box.
+
 ### Assess app changes that would change your decision.
 
 *Detail how the app and any other needs would have to change for you to change your decision in the last section.* 
 
-If the cost was high, or the App Service configuration proved cumbersome or error prone, I might choose to use the VM for the cheapness and ease of debugging without the layers of abstraction.
-
+While the cost of the App Service is higher, even for a small app like this, it's not high enough to worry about.  I'm more concerend with ease of deployment for the webapp and the promise of an App Service is to enable that easy deployment.  However, if the layers of abstraction make it more challenging, I might choose to switch to the VM for the cheapness and ease of debugging, even if it means giving up some of the automatic front end features.
