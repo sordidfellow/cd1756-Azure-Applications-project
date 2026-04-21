@@ -18,7 +18,7 @@ imageSourceUrl = 'https://'+ app.config['BLOB_ACCOUNT']  + '.blob.core.windows.n
 @app.route('/home')
 @login_required
 def home():
-    user = User.query.filter_by(username=current_user.username).first_or_404()
+    _user = User.query.filter_by(username=current_user.username).first_or_404()
     posts = Post.query.all()
     return render_template(
         'index.html',
@@ -82,10 +82,12 @@ def login():
 
 @app.route(Config.REDIRECT_PATH)  # Its absolute URL must match your app's redirect_uri set in AAD
 def authorized():
-    app.logger.info("/authorized endpoint starting...")
+    app.logger.info("/authorized - endpoint starting...")
     if request.args.get('state') != session.get("state"):
+        app.logger.error("/authorized - missing state or mismatch on state")
         return redirect(url_for("home"))  # No-OP. Goes back to Index page
     if "error" in request.args:  # Authentication/Authorization failure
+        app.logger.error(f"/authorized - error in request.args: {request.args}")
         return render_template("auth_error.html", result=request.args)
     if request.args.get('code'):
         app.logger.info("/authorized - checking status of values....")
@@ -93,6 +95,7 @@ def authorized():
         result = _build_msal_app().acquire_token_by_auth_code_flow(
             session.get("flow", {}), request.args)
         if "error" in result:
+            app.logger.info(f"/authorized - found error in result values: {result}")
             return render_template("auth_error.html", result=result)
         app.logger.info("/authorized - extracting claims...")
         session["user"] = result.get("id_token_claims")
@@ -101,6 +104,7 @@ def authorized():
         user = User.query.filter_by(username="admin").first()
         login_user(user)
         _save_cache(cache)
+    app.logger.warning("/authorized - reached end of func")
     return redirect(url_for('home'))
 
 @app.route('/logout')
