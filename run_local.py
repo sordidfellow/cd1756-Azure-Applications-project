@@ -12,9 +12,7 @@ from logging.handlers import RotatingFileHandler
 os.environ['LOCAL_DEV'] = 'true'
 
 # Set up SQLite for local development
-os.environ['LOCAL_DB'] = os.path.join(os.path.dirname(__file__), 'local_dev.db')
-
-from FlaskWebProject import app
+# os.environ['LOCAL_DB'] = os.path.join(os.path.dirname(__file__), 'local_dev.db')
 
 # Load environment variables from webapp_secrets.json
 settings_file = os.path.join(os.path.dirname(__file__), 'webapp_secrets.json')
@@ -25,9 +23,14 @@ if os.path.exists(settings_file):
             os.environ[setting['name']] = setting['value']
             # print(f"{setting['name']} = {setting['value']}")
     print("Loaded environment variables from webapp_secrets.json")
+else:
+    raise FileNotFoundError("missing webapp_secrets.json")
 
 # Set local development mode
 os.environ['LOCAL_DEV'] = 'true'
+
+# 
+from FlaskWebProject import app
 
 # Enable debug mode
 app.debug = True
@@ -48,23 +51,23 @@ werkzeug_logger = logging.getLogger('werkzeug')
 werkzeug_logger.addHandler(file_handler)
 werkzeug_logger.setLevel(logging.DEBUG)
 
-# Create database tables for local development
-if os.environ.get('LOCAL_DEV') == 'true':
-    from FlaskWebProject import db
-    from FlaskWebProject.models import User
-    with app.app_context():
-        db.create_all()
-        # Create default admin user if not exists
-        if not User.query.filter_by(username='admin').first():
-            admin = User(username='admin')
-            admin.set_password('pass')
-            db.session.add(admin)
-            db.session.commit()
-            print("Default admin user created (username: admin, password: pass)")
-        print("Database tables created for local development.")
-        # Ensure local image directory exists
-        local_image_dir = os.path.join(os.path.dirname(__file__), 'FlaskWebProject', 'static', 'images')
-        os.makedirs(local_image_dir, exist_ok=True)
+# # Create database tables for local development
+# if os.environ.get('LOCAL_DEV') == 'true':
+#     from FlaskWebProject import db
+#     from FlaskWebProject.models import User
+#     with app.app_context():
+#         db.create_all()
+#         # Create default admin user if not exists
+#         if not User.query.filter_by(username='admin').first():
+#             admin = User(username='admin')
+#             admin.set_password('pass')
+#             db.session.add(admin)
+#             db.session.commit()
+#             print("Default admin user created (username: admin, password: pass)")
+#         print("Database tables created for local development.")
+#         # Ensure local image directory exists
+#         local_image_dir = os.path.join(os.path.dirname(__file__), 'FlaskWebProject', 'static', 'images')
+#         os.makedirs(local_image_dir, exist_ok=True)
 
 if __name__ == '__main__':
     print(f"Starting Flask app in debug mode...")

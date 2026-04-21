@@ -46,7 +46,6 @@ app.config.from_object(Config)
 setup_logging(app)
 
 Session(app)
-logging.warning(f"{app.config =}")
 db = SQLAlchemy(app)
 login = LoginManager(app)
 login.login_view = 'login'
