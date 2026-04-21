@@ -82,9 +82,9 @@ def login():
 
 @app.route(Config.REDIRECT_PATH)  # Its absolute URL must match your app's redirect_uri set in AAD
 def authorized():
-    app.logger.debug(f"/authorized ({Config.REDIRECT_PATH}) - endpoint starting with {request.args =}")
+    app.logger.debug(f"/authorized ({Config.REDIRECT_PATH}) - endpoint starting with {request.args =} and {session =}")
     if request.args.get('state') != session.get("state"):
-        app.logger.error(f"/authorized ({Config.REDIRECT_PATH}) - missing state or mismatch on state (request.args == {request.args.get('state')} and session == {session.get('state')}), rerouting home.")
+        app.logger.error(f"/authorized ({Config.REDIRECT_PATH}) - missing state or mismatch on state (request.args == {request.args} and session['state'] == {session.get('state')}), rerouting home.")
         return redirect(url_for("home"))  # No-OP. Goes back to Index page
     if "error" in request.args:  # Authentication/Authorization failure
         app.logger.error(f"/authorized ({Config.REDIRECT_PATH}) - error in request.args: {request.args}, User failed login attempt.")
@@ -93,7 +93,7 @@ def authorized():
         app.logger.debug(f"/authorized ({Config.REDIRECT_PATH}) - checking status of values....")
         cache = _load_cache()
         app.logger.debug(f"/authorized ({Config.REDIRECT_PATH}) - token cache loaded....")
-        result = _build_msal_app().acquire_token_by_auth_code_flow(
+        result = _build_msal_app(cache=_load_cache(), authority=Config.AUTHORITY).acquire_token_by_auth_code_flow(
             session.get("flow", {}), request.args)
         if "error" in result:
             app.logger.error(f"/authorized ({Config.REDIRECT_PATH}) - found error in result values: {result}")
@@ -139,7 +139,7 @@ def _save_cache(cache):
 def _build_msal_app(cache=None, authority=None):
     app.logger.info(f"_build_msal_app called with {cache =} and {authority =}")
     return msal.ConfidentialClientApplication(
-        client_id=Config.CLIENT_ID, authority=authority, client_credential=Config.CLIENT_SECRET, token_cache=cache)
+        client_id=Config.CLIENT_ID, authority=(authority or Config.AUTHORITY), client_credential=Config.CLIENT_SECRET, token_cache=(cache or _load_cache()))
 
 def _build_auth_url(authority=None, scopes=None, state=None):
     app.logger.info(f"_build_auth_url called, params are {authority =} {scopes =} {state =}")
