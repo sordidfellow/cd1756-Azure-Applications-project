@@ -83,8 +83,12 @@ def login():
 @app.route(Config.REDIRECT_PATH)  # Its absolute URL must match your app's redirect_uri set in AAD
 def authorized():
     app.logger.debug(f"/authorized ({Config.REDIRECT_PATH}) - endpoint starting with {request.args =} and {session =}")
-    if request.args.get('session_state') != session.get("state"):
-        app.logger.error(f"/authorized ({Config.REDIRECT_PATH}) - missing state or mismatch on state (request.args == {request.args} and session['state'] == {session.get('state')}), rerouting home.")
+    # if request.args.get('session_state') != session.get("state"):
+    #     app.logger.error(f"/authorized ({Config.REDIRECT_PATH}) - missing state or mismatch on state (request.args == {request.args} and session['state'] == {session.get('state')}), rerouting home.")
+    #     return redirect(url_for("home"))  # No-OP. Goes back to Index page
+    flow = session.get("flow", {})
+    if not flow:
+        app.logger.error(f"/authorized ({Config.REDIRECT_PATH}) - missing flow")
         return redirect(url_for("home"))  # No-OP. Goes back to Index page
     if "error" in request.args:  # Authentication/Authorization failure
         app.logger.error(f"/authorized ({Config.REDIRECT_PATH}) - error in request.args: {request.args}, User failed login attempt.")
@@ -143,7 +147,13 @@ def _build_msal_app(cache=None, authority=None):
 
 def _build_auth_url(authority=None, scopes=None, state=None):
     app.logger.info(f"_build_auth_url called, params are {authority =} {scopes =} {state =}")
-    auth_url = _build_msal_app(cache=_load_cache(), authority=(authority or Config.AUTHORITY)).get_authorization_request_url(
-        scopes=scopes, redirect_uri=url_for('authorized', _external=True, _scheme = "https"))
-    app.logger.info(f"_build_auth_url returning, value {auth_url =}")
-    return auth_url
+    # auth_url = _build_msal_app(cache=_load_cache(), authority=(authority or Config.AUTHORITY)).get_authorization_request_url(
+    #     scopes=scopes, redirect_uri=url_for('authorized', _external=True, _scheme = "https"))
+    # return auth_url
+
+    flow = _build_msal_app().initiate_auth_code_flow(scopes=scopes, redirect_uri=url_for('authorized', _external=True, _scheme = "https"))
+    session["flow"] = flow  # Store the entire flow dict!
+    app.logger.info(f"_build_auth_url returning, value {flow['auth_uri'] =}")
+    return flow["auth_uri"]
+
+    
